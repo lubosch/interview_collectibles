@@ -1,0 +1,88 @@
+# Comments are provided throughout this file to help you get started.
+# If you need more help, visit the Docker compose reference guide at
+# https://docs.docker.com/compose/compose-file/
+
+# Here the instructions define your application as a service called "app".
+# This service is built from the Dockerfile in the current directory.
+# You can add other services your application may depend on here, such as a
+# database or a cache. For examples, see the Awesome Compose repository:
+# https://github.com/docker/awesome-compose
+services:
+  redis:
+    image: redis:latest
+  app:
+    build: .
+    command: bash -c "rm -f tmp/pids/server.pid && bundle exec rails s -p 3000 -b '0.0.0.0'"
+    # If your application exposes a port, uncomment the following lines and change
+    # the port numbers as needed. The first number is the host port and the second
+    # is the port inside the container.
+    ports:
+      - 3000:3000
+
+    # The commented out section below is an example of how to define a PostgreSQL
+    # database that your application can use. `depends_on` tells Docker Compose to
+    # start the database before your application. The `db-data` volume persists the
+    # database data between container restarts. The `db-password` secret is used
+    # to set the database password. You must create `db/password.txt` and add
+    #     a password of your choosing to it before running `docker compose up`.
+    environment:
+      BUNDLE_PATH: /box
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_HOST: postgres
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_DB_NAME: wilio_development
+      DATABASE_PORT: 5432
+    volumes:
+      - .:/home/collectibles
+      - box:/box
+    depends_on:
+      - sidekiq
+      - postgres
+  sidekiq:
+    build: .
+    command: bundle exec sidekiq
+    # The commented out section below is an example of how to define a PostgreSQL
+    # database that your application can use. `depends_on` tells Docker Compose to
+    # start the database before your application. The `db-data` volume persists the
+    # database data between container restarts. The `db-password` secret is used
+    # to set the database password. You must create `db/password.txt` and add
+    #     a password of your choosing to it before running `docker compose up`.
+    environment:
+      BUNDLE_PATH: /box
+      RAILS_ENV: development
+      REDIS_URL: redis://redis:6379/0
+      DATABASE_HOST: postgres
+      DATABASE_USERNAME: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_DB_NAME: wilio_development
+      DATABASE_PORT: 5432
+    volumes:
+      - .:/home/collectibles
+      - box:/box
+    depends_on:
+      - redis
+      - postgres
+  postgres:
+    image: postgres
+    restart: always
+    user: postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=collectibles_development
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+    expose:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD", "pg_isready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+volumes:
+  db-data:
+    driver: local
+  box:
+    driver: local
