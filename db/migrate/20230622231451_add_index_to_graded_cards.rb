@@ -14,7 +14,7 @@ class AddIndexToGradedCards < ActiveRecord::Migration[7.0]
   def down
     execute(
       <<-SQL
-        DROP INDEX CONCURRENTLY index_graded_cards_on_card_id_and_grade_and_qualifier
+        DROP INDEX CONCURRENTLY index_graded_cards_on_card_id_and_grade_and_qualifier;
       SQL
     )
   end

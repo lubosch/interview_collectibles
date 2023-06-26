@@ -10,5 +10,5 @@ task :import_graded_cards_with_threads => :environment do
 end
 
 task :import_graded_cards_with_sidekiq => :environment do
-  100.times { CreateGradedCardJob.perform_later }
+  200.times { CreateGradedCardJob.perform_later }
 end
